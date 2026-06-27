@@ -1,0 +1,2035 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Задачи</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  @font-face {
+    font-family: 'Manrope';
+    src: local('Manrope');
+  }
+
+  :root {
+    --bg:        #15171c;
+    --bg-raised: #1d2027;
+    --bg-card:   #20232b;
+    --line:      #2c303a;
+    --ink:       #eef0f3;
+    --ink-dim:   #9398a3;
+    --ink-faint: #5d626d;
+
+    --accent:    #5b8cff;
+    --accent-ink:#0c1322;
+
+    --critical:  #ff5d6c;
+    --high:      #ff9f4a;
+    --medium:    #ffd54a;
+    --low:       #4ad97a;
+
+    --radius-lg: 18px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bot: env(safe-area-inset-bottom, 0px);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: none;
+  }
+
+  #app {
+    min-height: 100vh;
+    padding-bottom: calc(84px + var(--safe-bot));
+  }
+
+  .sidebar { display: none; }
+  .desktop-header { display: none; }
+  .pane-title { display: none; }
+  .pane-divider { border-left: none; padding-left: 0; }
+
+  /* ── Desktop shell ───────────────────────────────────────────────────── */
+
+  @media (min-width: 860px) {
+    body { overflow: hidden; }
+
+    #app {
+      display: grid;
+      grid-template-columns: 248px 1fr;
+      height: 100vh;
+      padding-bottom: 0;
+      max-width: none;
+    }
+
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--line);
+      padding: 24px 16px;
+      background: var(--bg-raised);
+    }
+
+    .sidebar .brand {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      margin: 4px 0 28px;
+      padding: 0 8px;
+    }
+
+    .sidebar .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 12px;
+      border-radius: var(--radius-md);
+      color: var(--ink-dim);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 2px;
+      border: none;
+      background: transparent;
+      width: 100%;
+      text-align: left;
+      font-family: inherit;
+    }
+
+    .sidebar .nav-item .glyph { font-size: 16px; width: 18px; text-align: center; }
+
+    .sidebar .nav-item.active {
+      background: var(--bg-card);
+      color: var(--ink);
+    }
+
+    .sidebar .nav-section-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--ink-faint);
+      font-weight: 700;
+      padding: 0 12px;
+      margin: 22px 0 8px;
+    }
+
+    .sidebar .chip-vert {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 9px 12px;
+      border-radius: var(--radius-md);
+      color: var(--ink-dim);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      width: 100%;
+      text-align: left;
+      font-family: inherit;
+    }
+    .sidebar .chip-vert.active { background: var(--bg-card); color: var(--ink); }
+    .sidebar .chip-vert .swatch { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    .sidebar .new-task-btn {
+      margin-top: auto;
+      width: 100%;
+      background: var(--accent);
+      color: var(--accent-ink);
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 800;
+      padding: 13px 0;
+    }
+
+    .main-pane {
+      overflow-y: auto;
+      height: 100vh;
+      min-width: 0;
+    }
+
+    /* Hide mobile-only chrome */
+    .switch, .chips, .fab, .topbar { display: none !important; }
+    #fabAdd { display: flex !important; right: 36px; bottom: 36px; }
+    #fabVoice { display: flex !important; right: 104px; bottom: 36px; }
+
+    .desktop-header {
+      display: flex !important;
+      align-items: center;
+      justify-content: space-between;
+      padding: 28px 36px 4px;
+    }
+
+    /* Two-pane desktop body: list + calendar side by side */
+    .desktop-split {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 0;
+      align-items: start;
+      min-width: 0;
+    }
+    .desktop-split > div { min-width: 0; }
+    .desktop-split .pane-divider {
+      border-left: 1px solid var(--line);
+      padding-left: 28px;
+    }
+    .desktop-split .pane-title {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0 28px 14px;
+      margin-top: 6px;
+    }
+
+    #listView { padding-right: 8px; display: block !important; }
+    .day-group { padding: 14px 28px 4px; }
+
+    .task-card { padding: 14px 14px 14px 16px; }
+    .task-time-col { width: 58px; }
+    .task-actions { flex-direction: row; align-self: flex-start; }
+    .task-title { font-size: 14.5px; }
+
+    .cal-wrap { padding: 0 0 24px 28px; display: block !important; }
+    .cal-strip { padding: 0 28px 4px 0; }
+    .timeline { padding-right: 28px; }
+  }
+
+  /* ── Header ──────────────────────────────────────────────────────────── */
+
+  .topbar {
+    padding: calc(18px + var(--safe-top)) 20px 14px;
+    position: sticky;
+    top: 0;
+    background: linear-gradient(to bottom, var(--bg) 80%, transparent);
+    z-index: 20;
+  }
+
+  .topbar-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .title-xl {
+    font-size: 27px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  .stat-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    padding: 7px 13px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink-dim);
+    white-space: nowrap;
+  }
+
+  .stat-pill .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--critical);
+  }
+
+  /* ── View switch ─────────────────────────────────────────────────────── */
+
+  .switch {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-raised);
+    border-radius: var(--radius-md);
+    padding: 4px;
+    margin-top: 16px;
+  }
+
+  .switch button {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--ink-dim);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 9px 0;
+    border-radius: calc(var(--radius-md) - 4px);
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .switch button.active {
+    background: var(--bg-card);
+    color: var(--ink);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset;
+  }
+
+  /* ── Filter chips ────────────────────────────────────────────────────── */
+
+  .chips {
+    display: flex;
+    gap: 8px;
+    padding: 14px 20px 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .chips::-webkit-scrollbar { display: none; }
+
+  .chip {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 100px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink-dim);
+    font-size: 13px;
+    font-weight: 700;
+    font-family: inherit;
+  }
+
+  .chip.active {
+    background: var(--ink);
+    color: var(--accent-ink);
+    border-color: var(--ink);
+  }
+
+  .chip .swatch {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+
+  /* ── List view ───────────────────────────────────────────────────────── */
+
+  .day-group {
+    padding: 22px 20px 4px;
+  }
+
+  .day-label {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .day-label .name {
+    font-size: 15px;
+    font-weight: 800;
+  }
+
+  .day-label .count {
+    font-size: 12px;
+    color: var(--ink-faint);
+    font-weight: 600;
+  }
+
+  .task-card {
+    position: relative;
+    display: flex;
+    gap: 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 14px 14px 14px 16px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+
+  .task-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: var(--prio-color, var(--medium));
+  }
+
+  .task-card.done { opacity: 0.45; }
+  .task-card.done .task-title { text-decoration: line-through; }
+
+  .task-time-col {
+    flex-shrink: 0;
+    width: 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding-top: 1px;
+  }
+
+  .task-time-col .hm {
+    font-size: 15px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .task-time-col .ddl {
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    margin-top: 3px;
+    font-weight: 600;
+  }
+
+  .task-body { flex: 1; min-width: 0; }
+
+  .task-title {
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.35;
+    margin: 0 0 4px;
+  }
+
+  .task-note {
+    font-size: 12.5px;
+    color: var(--ink-dim);
+    line-height: 1.4;
+    margin: 0 0 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .task-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 100px;
+  }
+
+  .badge.prio {
+    background: color-mix(in srgb, var(--prio-color, var(--medium)) 16%, transparent);
+    color: var(--prio-color, var(--medium));
+  }
+
+  .badge.link {
+    background: var(--bg-raised);
+    color: var(--ink-dim);
+  }
+
+  .task-actions {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .icon-btn {
+    width: 32px; height: 32px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--bg-raised);
+    color: var(--ink-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+  }
+
+  .icon-btn.check.is-done {
+    background: var(--low);
+    border-color: var(--low);
+    color: #0c1f12;
+  }
+
+  /* ── Calendar view ───────────────────────────────────────────────────── */
+
+  .cal-wrap { padding: 14px 20px 0; }
+
+  .cal-strip {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .cal-strip::-webkit-scrollbar { display: none; }
+
+  .cal-day {
+    flex-shrink: 0;
+    width: 52px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 0 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+  }
+
+  .cal-day .dow {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 700;
+  }
+
+  .cal-day .num {
+    font-size: 17px;
+    font-weight: 800;
+  }
+
+  .cal-day .dots {
+    display: flex;
+    gap: 3px;
+    height: 5px;
+  }
+
+  .cal-day .dots span {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+  }
+
+  .cal-day.selected {
+    background: var(--ink);
+    border-color: var(--ink);
+  }
+  .cal-day.selected .dow,
+  .cal-day.selected .num { color: var(--accent-ink); }
+
+  .cal-day.today:not(.selected) {
+    border-color: var(--accent);
+  }
+
+  .timeline {
+    margin-top: 22px;
+    padding: 0 0 0 4px;
+  }
+
+  .timeline-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--ink-faint);
+  }
+
+  .timeline-empty .glyph {
+    font-size: 34px;
+    margin-bottom: 10px;
+    opacity: 0.5;
+  }
+
+  .timeline-empty .msg {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .hour-row {
+    display: flex;
+    min-height: 38px;
+    position: relative;
+  }
+
+  .hour-row .hr-label {
+    width: 46px;
+    flex-shrink: 0;
+    font-size: 11px;
+    color: var(--ink-faint);
+    font-weight: 700;
+    padding-top: 2px;
+    text-align: right;
+    padding-right: 10px;
+  }
+
+  .hour-row .hr-line {
+    flex: 1;
+    border-top: 1px solid var(--line);
+    position: relative;
+    padding: 6px 16px 6px 0;
+  }
+
+  .hour-row:first-child .hr-line { border-top: none; }
+
+  .tl-card {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--prio-color, var(--medium));
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+  }
+
+  .tl-card .hm-small {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--ink-faint);
+    flex-shrink: 0;
+    padding-top: 1px;
+  }
+
+  .tl-card .tbody { flex: 1; min-width: 0; }
+
+  .tl-card .ttitle {
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .tl-card.done { opacity: 0.4; }
+  .tl-card.done .ttitle { text-decoration: line-through; }
+
+  /* ── Empty states ────────────────────────────────────────────────────── */
+
+  .empty-state {
+    text-align: center;
+    padding: 70px 30px;
+    color: var(--ink-faint);
+  }
+  .empty-state .glyph { font-size: 38px; margin-bottom: 12px; opacity: 0.5; }
+  .empty-state .msg { font-size: 14.5px; font-weight: 600; line-height: 1.5; }
+
+  /* ── FAB ─────────────────────────────────────────────────────────────── */
+
+  .fab {
+    position: fixed;
+    right: 20px;
+    bottom: calc(20px + var(--safe-bot));
+    width: 56px; height: 56px;
+    border-radius: 18px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border: none;
+    font-size: 26px;
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px -6px color-mix(in srgb, var(--accent) 60%, transparent);
+    z-index: 30;
+    cursor: pointer;
+  }
+
+  .fab-voice {
+    right: 86px;
+    background: var(--bg-card);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    box-shadow: 0 4px 16px -4px rgba(0,0,0,0.4);
+    font-size: 22px;
+  }
+
+  .fab-voice.recording {
+    background: var(--critical);
+    border-color: var(--critical);
+    color: #fff;
+    animation: pulse-rec 1s ease-in-out infinite;
+  }
+
+  @keyframes pulse-rec {
+    0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--critical) 50%, transparent); }
+    50% { box-shadow: 0 0 0 10px color-mix(in srgb, var(--critical) 0%, transparent); }
+  }
+
+  /* ── Voice overlay ───────────────────────────────────────────────────────── */
+
+  .voice-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  .voice-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .voice-mic-circle {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    background: var(--critical);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 44px;
+    animation: pulse-rec 1s ease-in-out infinite;
+  }
+
+  .voice-hint {
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    text-align: center;
+    max-width: 260px;
+    line-height: 1.5;
+  }
+
+  .voice-transcript {
+    color: rgba(255,255,255,0.7);
+    font-size: 14px;
+    text-align: center;
+    max-width: 300px;
+    min-height: 40px;
+    line-height: 1.5;
+    font-style: italic;
+  }
+
+  .voice-processing {
+    color: var(--accent);
+    font-size: 14px;
+    font-weight: 700;
+    display: none;
+  }
+
+  .voice-cancel {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    border-radius: 100px;
+    padding: 10px 28px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+
+  /* ── Sheet (detail / edit) ───────────────────────────────────────────── */
+
+  .sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .sheet-backdrop.show { opacity: 1; pointer-events: auto; }
+
+  .sheet {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    max-height: 88vh;
+    background: var(--bg-raised);
+    border-radius: 22px 22px 0 0;
+    z-index: 101;
+    transform: translateY(100%);
+    transition: transform 0.28s cubic-bezier(.32,.72,0,1);
+    display: flex;
+    flex-direction: column;
+    padding-bottom: var(--safe-bot);
+  }
+  .sheet.show { transform: translateY(0); }
+
+  .sheet-handle {
+    width: 36px; height: 4px;
+    background: var(--line);
+    border-radius: 4px;
+    margin: 10px auto 4px;
+    flex-shrink: 0;
+  }
+
+  .sheet-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px 14px;
+    flex-shrink: 0;
+  }
+
+  .sheet-head h2 {
+    font-size: 17px;
+    font-weight: 800;
+    margin: 0;
+  }
+
+  .sheet-close {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--bg-card);
+    border: none;
+    color: var(--ink-dim);
+    font-size: 15px;
+  }
+
+  .sheet-body {
+    overflow-y: auto;
+    padding: 0 20px 24px;
+  }
+
+  /* form */
+
+  .field { margin-bottom: 16px; }
+
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 7px;
+  }
+
+  .field input[type=text],
+  .field input[type=date],
+  .field input[type=time],
+  .field input[type=url],
+  .field textarea {
+    width: 100%;
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 13px 14px;
+    outline: none;
+  }
+
+  .field input:focus, .field textarea:focus {
+    border-color: var(--accent);
+  }
+
+  .field textarea {
+    resize: none;
+    min-height: 70px;
+    font-weight: 500;
+  }
+
+  .row2 { display: flex; gap: 10px; }
+  .row2 > .field { flex: 1; }
+
+  .prio-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .prio-opt {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 11px 12px;
+    background: var(--bg-card);
+  }
+
+  .prio-opt .swatch {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .prio-opt span.label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink-dim);
+  }
+
+  .prio-opt.selected {
+    border-color: var(--opt-color);
+    background: color-mix(in srgb, var(--opt-color) 12%, var(--bg-card));
+  }
+  .prio-opt.selected span.label { color: var(--ink); }
+
+  .btn-primary {
+    width: 100%;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-size: 15.5px;
+    font-weight: 800;
+    padding: 15px 0;
+    margin-top: 6px;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .btn-ghost {
+    flex: 1;
+    background: var(--bg-card);
+    color: var(--ink-dim);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 13px 0;
+  }
+
+  .btn-ghost.danger { color: var(--critical); }
+
+  .photo-preview {
+    margin-top: 8px;
+    border-radius: var(--radius-md);
+    max-width: 100%;
+    display: block;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: calc(90px + var(--safe-bot));
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--ink);
+    color: var(--accent-ink);
+    font-size: 13.5px;
+    font-weight: 700;
+    padding: 12px 20px;
+    border-radius: 100px;
+    z-index: 200;
+    opacity: 0;
+    transition: opacity 0.25s, transform 0.25s;
+    white-space: nowrap;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <nav class="sidebar">
+    <div class="brand">Задачи</div>
+
+    <button class="nav-item active" data-view="list">
+      <span class="glyph">☰</span> Список
+    </button>
+    <button class="nav-item" data-view="calendar">
+      <span class="glyph">▦</span> Календарь
+    </button>
+
+    <div class="nav-section-label">Приоритет</div>
+    <button class="chip-vert active" data-filter="all">Все задачи</button>
+    <button class="chip-vert" data-filter="critical"><span class="swatch" style="background:var(--critical)"></span>Критично</button>
+    <button class="chip-vert" data-filter="high"><span class="swatch" style="background:var(--high)"></span>Высокий</button>
+    <button class="chip-vert" data-filter="medium"><span class="swatch" style="background:var(--medium)"></span>Средний</button>
+    <button class="chip-vert" data-filter="low"><span class="swatch" style="background:var(--low)"></span>Низкий</button>
+
+    <button class="new-task-btn" id="fabAddDesktop">+ Новая задача</button>
+  </nav>
+
+  <div class="main-pane">
+  <div class="topbar">
+    <div class="topbar-row">
+      <div>
+        <div class="eyebrow" id="dateEyebrow">—</div>
+        <h1 class="title-xl">Задачи</h1>
+      </div>
+      <div class="stat-pill" id="urgentPill">
+        <span class="dot"></span>
+        <span id="urgentCount">0</span> срочных
+      </div>
+    </div>
+
+    <div class="switch">
+      <button class="active" data-view="list">Список</button>
+      <button data-view="calendar">Календарь</button>
+    </div>
+  </div>
+
+  <div class="desktop-header">
+    <div class="eyebrow" id="dateEyebrowDesktop">—</div>
+    <div class="stat-pill" id="urgentPillDesktop">
+      <span class="dot"></span>
+      <span id="urgentCountDesktop">0</span> срочных
+    </div>
+  </div>
+
+  <div class="chips" id="filterChips">
+    <button class="chip active" data-filter="all">Все</button>
+    <button class="chip" data-filter="critical"><span class="swatch" style="background:var(--critical)"></span>Критично</button>
+    <button class="chip" data-filter="high"><span class="swatch" style="background:var(--high)"></span>Высокий</button>
+    <button class="chip" data-filter="medium"><span class="swatch" style="background:var(--medium)"></span>Средний</button>
+    <button class="chip" data-filter="low"><span class="swatch" style="background:var(--low)"></span>Низкий</button>
+  </div>
+
+  <div class="desktop-split">
+    <div>
+      <div class="pane-title">Список задач</div>
+      <div id="listView"></div>
+    </div>
+    <div class="pane-divider">
+      <div class="pane-title">Календарь</div>
+      <div id="calendarView" class="cal-wrap" style="display:none">
+        <div class="cal-strip" id="calStrip"></div>
+        <div class="timeline" id="timeline"></div>
+      </div>
+    </div>
+  </div>
+
+  </div>
+</div>
+
+<button class="fab fab-voice" id="fabVoice">🎤</button>
+<button class="fab" id="fabAdd">+</button>
+
+<div class="voice-overlay" id="voiceOverlay">
+  <div class="voice-mic-circle">🎤</div>
+  <div class="voice-hint">Говори задачу...<br><small style="font-weight:400;font-size:13px">Например: «Сделать инфографику завтра до 16:00, срочно»</small></div>
+  <div class="voice-transcript" id="voiceTranscript"></div>
+  <div class="voice-processing" id="voiceProcessing">⏳ Обрабатываю...</div>
+  <button class="voice-cancel" id="voiceCancel">Отмена</button>
+</div>
+
+<div class="sheet-backdrop" id="backdrop"></div>
+
+<!-- Detail sheet -->
+<div class="sheet" id="detailSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <h2>Задача</h2>
+    <button class="sheet-close" id="detailClose">✕</button>
+  </div>
+  <div class="sheet-body" id="detailBody"></div>
+</div>
+
+<!-- Edit / create sheet -->
+<div class="sheet" id="editSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <h2 id="editTitle">Новая задача</h2>
+    <button class="sheet-close" id="editClose">✕</button>
+  </div>
+  <div class="sheet-body">
+    <div class="field">
+      <label>Название</label>
+      <input type="text" id="fTitle" placeholder="Сделать инфографику карточки">
+    </div>
+    <div class="field">
+      <label>Примечание</label>
+      <textarea id="fNote" placeholder="Детали, требования, контекст…"></textarea>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Дата</label>
+        <input type="date" id="fDate">
+      </div>
+      <div class="field">
+        <label>Время</label>
+        <input type="time" id="fTime">
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Дедлайн дата</label>
+        <input type="date" id="fDeadlineDate">
+      </div>
+      <div class="field">
+        <label>Дедлайн время</label>
+        <input type="time" id="fDeadlineTime">
+      </div>
+    </div>
+    <div class="field">
+      <label>Приоритет</label>
+      <div class="prio-grid" id="prioGrid"></div>
+    </div>
+    <div class="field">
+      <label>Ссылка</label>
+      <input type="url" id="fLink" placeholder="https://…">
+    </div>
+    <button class="btn-primary" id="saveBtn">Сохранить</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function() {
+  'use strict';
+
+  const tg = window.Telegram?.WebApp;
+  if (tg) { tg.ready(); tg.expand(); }
+
+  console.log('[TaskBot] tg exists:', Boolean(window.Telegram));
+  console.log('[TaskBot] initData length:', (tg?.initData || '').length);
+  console.log('[TaskBot] platform:', tg?.platform || 'n/a');
+
+  const PRIORITIES = [
+    { key: 'critical', label: 'Критично', color: 'var(--critical)' },
+    { key: 'high',     label: 'Высокий',  color: 'var(--high)' },
+    { key: 'medium',   label: 'Средний',  color: 'var(--medium)' },
+    { key: 'low',      label: 'Низкий',   color: 'var(--low)' },
+  ];
+  const PRIO_MAP = Object.fromEntries(PRIORITIES.map(p => [p.key, p]));
+
+  // ── API client ────────────────────────────────────────────────────────
+  // Все запросы идут на api.py на том же домене, подпись initData
+  // подтверждает что запрос реально пришёл из Telegram для этого пользователя.
+  const API_URL = 'api.py';
+  const initData = tg?.initData || '';
+  const isInTelegram = Boolean(initData);
+
+  async function apiCall(action, payload) {
+    const body = JSON.stringify({ initData, ...payload });
+    try {
+      const res = await fetch(`${API_URL}?action=${action}`, {
+        method: action === 'list' ? 'GET' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: action === 'list' ? undefined : body,
+      });
+      return await res.json();
+    } catch (e) {
+      console.error('API error', action, e);
+      return { ok: false, error: 'network' };
+    }
+  }
+
+  async function apiList() {
+    const url = `${API_URL}?action=list&initData=${encodeURIComponent(initData)}`;
+    try {
+      const res = await fetch(url);
+      return await res.json();
+    } catch (e) {
+      console.error('API list error', e);
+      return { ok: false, error: 'network' };
+    }
+  }
+
+  // ── Demo seed — используется только вне Telegram (для просмотра дизайна) ─
+  function seedTasks() {
+    const today = new Date();
+    const mk = (offsetDays, h, m, title, note, prio, status, deadlineOffsetH, link) => {
+      const dt = new Date(today);
+      dt.setDate(dt.getDate() + offsetDays);
+      dt.setHours(h, m, 0, 0);
+      let deadline = null;
+      if (deadlineOffsetH != null) {
+        const d2 = new Date(dt);
+        d2.setHours(d2.getHours() + deadlineOffsetH);
+        deadline = d2.toISOString();
+      }
+      return {
+        id: 'demo_' + Math.random().toString(36).slice(2),
+        title, note: note || '', priority: prio, status: status || 'pending',
+        scheduled_at: dt.toISOString(), deadline, link: link || null,
+      };
+    };
+    return [
+      mk(0, 16, 0, 'Сделать инфографику карточки товара', 'Артикул KS-221, 4 слайда, чёрный фон', 'critical', 'pending', 0, null),
+      mk(0, 18, 30, 'Договор с поставщиком ткани', 'Согласовать пункт про сроки доставки', 'high', 'pending', 4, null),
+      mk(1, 10, 0, 'Обновить прайс на сайте', '', 'medium', 'pending', null, 'https://meduzacrystal.by'),
+      mk(1, 14, 0, 'Снять видео для рилс', 'Студия, 2 модели, реквизит', 'low', 'pending', null, null),
+      mk(-1, 12, 0, 'Проверить оплату рекламы', 'Каждую пятницу', 'medium', 'done', null, null),
+    ];
+  }
+
+  let tasks = [];
+  let view = 'list';
+  let filter = 'all';
+  let selectedDate = new Date();
+  let editingId = null;
+
+  const $ = (sel) => document.querySelector(sel);
+  const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+  const MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  const DOW_SHORT = ['ВС','ПН','ВТ','СР','ЧТ','ПТ','СБ'];
+
+  function fmtTime(iso) {
+    const d = new Date(iso);
+    return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  }
+  function fmtDayLabel(d) {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const tmr = new Date(today); tmr.setDate(tmr.getDate()+1);
+    const cmp = new Date(d); cmp.setHours(0,0,0,0);
+    if (cmp.getTime() === today.getTime()) return 'Сегодня';
+    if (cmp.getTime() === tmr.getTime()) return 'Завтра';
+    return `${d.getDate()} ${MONTHS_GEN[d.getMonth()]}`;
+  }
+  function isSameDay(a, b) {
+    return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+  }
+  function toast(msg) {
+    const t = $('#toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1800);
+  }
+  function haptic(style) {
+    try { tg?.HapticFeedback?.impactOccurred(style || 'light'); } catch(e) {}
+  }
+
+  // ── Render: header stats ────────────────────────────────────────────────
+  function renderHeader() {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
+    $('#dateEyebrow').textContent = dateStr;
+    const desktopEyebrow = $('#dateEyebrowDesktop');
+    if (desktopEyebrow) desktopEyebrow.textContent = dateStr;
+
+    const urgent = tasks.filter(t => t.status === 'pending' && (t.priority === 'critical' || t.priority === 'high')).length;
+    $('#urgentCount').textContent = urgent;
+    $('#urgentPill').style.opacity = urgent > 0 ? '1' : '0.5';
+    const desktopCount = $('#urgentCountDesktop');
+    const desktopPill = $('#urgentPillDesktop');
+    if (desktopCount) desktopCount.textContent = urgent;
+    if (desktopPill) desktopPill.style.opacity = urgent > 0 ? '1' : '0.5';
+  }
+
+  // ── Render: list view ───────────────────────────────────────────────────
+  function applyFilter(list) {
+    if (filter === 'all') return list;
+    return list.filter(t => t.priority === filter);
+  }
+
+  function renderList() {
+    const root = $('#listView');
+    const pending = applyFilter(tasks.filter(t => t.status === 'pending'))
+      .sort((a,b) => new Date(a.scheduled_at) - new Date(b.scheduled_at));
+
+    if (pending.length === 0) {
+      root.innerHTML = `
+        <div class="empty-state">
+          <div class="glyph">✓</div>
+          <div class="msg">Активных задач нет.<br>Нажми «+», чтобы добавить новую.</div>
+        </div>`;
+      return;
+    }
+
+    const groups = {};
+    pending.forEach(t => {
+      const key = new Date(t.scheduled_at).toDateString();
+      (groups[key] = groups[key] || []).push(t);
+    });
+
+    let html = '';
+    Object.keys(groups)
+      .sort((a,b) => new Date(a) - new Date(b))
+      .forEach(key => {
+        const list = groups[key];
+        const d = new Date(key);
+        html += `<div class="day-group">
+          <div class="day-label">
+            <span class="name">${fmtDayLabel(d)}</span>
+            <span class="count">${list.length} ${list.length === 1 ? 'задача' : 'задачи'}</span>
+          </div>
+          ${list.map(taskCardHtml).join('')}
+        </div>`;
+      });
+
+    root.innerHTML = html;
+    bindCardEvents(root);
+  }
+
+  function taskCardHtml(t) {
+    const p = PRIO_MAP[t.priority] || PRIO_MAP.medium;
+    const isDone = t.status === 'done';
+    const ddl = t.deadline ? `<div class="ddl">до ${fmtTime(t.deadline)}</div>` : '';
+    const note = t.note ? `<p class="task-note">${escapeHtml(t.note)}</p>` : '';
+    const linkBadge = t.link ? `<span class="badge link">🔗 Ссылка</span>` : '';
+    return `
+      <div class="task-card ${isDone ? 'done' : ''}" style="--prio-color:${p.color}" data-id="${t.id}">
+        <div class="task-time-col">
+          <div class="hm">${fmtTime(t.scheduled_at)}</div>
+          ${ddl}
+        </div>
+        <div class="task-body" data-action="open">
+          <p class="task-title">${escapeHtml(t.title)}</p>
+          ${note}
+          <div class="task-meta">
+            <span class="badge prio">${p.label}</span>
+            ${linkBadge}
+          </div>
+        </div>
+        <div class="task-actions">
+          <button class="icon-btn check ${isDone ? 'is-done' : ''}" data-action="toggle-done">✓</button>
+          <button class="icon-btn" data-action="open">⋯</button>
+        </div>
+      </div>`;
+  }
+
+  function escapeHtml(s) {
+    const div = document.createElement('div');
+    div.textContent = s;
+    return div.innerHTML;
+  }
+
+  function bindCardEvents(root) {
+    root.querySelectorAll('.task-card').forEach(card => {
+      const id = isNaN(card.dataset.id) ? card.dataset.id : Number(card.dataset.id);
+      card.querySelectorAll('[data-action="open"]').forEach(el =>
+        el.addEventListener('click', () => openDetail(id)));
+      const toggleBtn = card.querySelector('[data-action="toggle-done"]');
+      if (toggleBtn) toggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleDone(id);
+      });
+    });
+  }
+
+  // ── Render: calendar view ───────────────────────────────────────────────
+  function renderCalendarStrip() {
+    const strip = $('#calStrip');
+    const today = new Date(); today.setHours(0,0,0,0);
+    const start = new Date(today); start.setDate(start.getDate() - 3);
+    let html = '';
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(start); d.setDate(d.getDate() + i);
+      const dayTasks = tasks.filter(t => t.status === 'pending' && isSameDay(new Date(t.scheduled_at), d));
+      const dots = [...new Set(dayTasks.map(t => t.priority))].slice(0, 3)
+        .map(p => `<span style="background:${PRIO_MAP[p].color}"></span>`).join('');
+      const isSel = isSameDay(d, selectedDate);
+      const isToday = isSameDay(d, today);
+      html += `<button class="cal-day ${isSel ? 'selected' : ''} ${isToday ? 'today' : ''}" data-date="${d.toISOString()}">
+        <span class="dow">${DOW_SHORT[d.getDay()]}</span>
+        <span class="num">${d.getDate()}</span>
+        <span class="dots">${dots}</span>
+      </button>`;
+    }
+    strip.innerHTML = html;
+    strip.querySelectorAll('.cal-day').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectedDate = new Date(btn.dataset.date);
+        renderCalendarStrip();
+        renderTimeline();
+      });
+    });
+    // автоскролл к выбранному дню
+    const sel = strip.querySelector('.cal-day.selected');
+    if (sel) sel.scrollIntoView({ inline: 'center', block: 'nearest' });
+  }
+
+  function renderTimeline() {
+    const root = $('#timeline');
+    const dayTasks = applyFilter(
+      tasks.filter(t => isSameDay(new Date(t.scheduled_at), selectedDate))
+    ).sort((a,b) => new Date(a.scheduled_at) - new Date(b.scheduled_at));
+
+    if (dayTasks.length === 0) {
+      root.innerHTML = `
+        <div class="timeline-empty">
+          <div class="glyph">📅</div>
+          <div class="msg">На этот день задач нет</div>
+        </div>`;
+      return;
+    }
+
+    const startHour = Math.max(0, Math.min(...dayTasks.map(t => new Date(t.scheduled_at).getHours())) - 1);
+    const endHour = Math.min(23, Math.max(...dayTasks.map(t => new Date(t.scheduled_at).getHours())) + 1);
+
+    let html = '';
+    for (let h = startHour; h <= endHour; h++) {
+      const hourTasks = dayTasks.filter(t => new Date(t.scheduled_at).getHours() === h);
+      html += `<div class="hour-row">
+        <div class="hr-label">${String(h).padStart(2,'0')}:00</div>
+        <div class="hr-line">
+          ${hourTasks.map(t => tlCardHtml(t)).join('')}
+        </div>
+      </div>`;
+    }
+    root.innerHTML = html;
+    bindCardEvents(root); // task-card class not used here; use direct binding below
+    root.querySelectorAll('.tl-card').forEach(card => {
+      const id = isNaN(card.dataset.id) ? card.dataset.id : Number(card.dataset.id);
+      card.addEventListener('click', () => openDetail(id));
+    });
+  }
+
+  function tlCardHtml(t) {
+    const p = PRIO_MAP[t.priority] || PRIO_MAP.medium;
+    const isDone = t.status === 'done';
+    return `<div class="tl-card ${isDone ? 'done' : ''}" style="--prio-color:${p.color}" data-id="${t.id}">
+      <span class="hm-small">${fmtTime(t.scheduled_at)}</span>
+      <div class="tbody">
+        <p class="ttitle">${escapeHtml(t.title)}</p>
+      </div>
+    </div>`;
+  }
+
+  // ── Detail sheet ────────────────────────────────────────────────────────
+  function openDetail(id) {
+    const t = tasks.find(x => x.id === id);
+    if (!t) return;
+    const p = PRIO_MAP[t.priority] || PRIO_MAP.medium;
+    const isDone = t.status === 'done';
+    const ddl = t.deadline ? `
+      <div class="field"><label>Дедлайн</label>
+      <div style="font-size:15px;font-weight:700">${new Date(t.deadline).toLocaleString('ru-RU', {day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'})}</div></div>` : '';
+    const link = t.link ? `
+      <div class="field"><label>Ссылка</label>
+      <a href="${t.link}" target="_blank" style="color:var(--accent);font-weight:700;font-size:14px;word-break:break-all">${t.link}</a></div>` : '';
+    const note = t.note ? `
+      <div class="field"><label>Примечание</label>
+      <div style="font-size:14.5px;color:var(--ink-dim);line-height:1.5">${escapeHtml(t.note)}</div></div>` : '';
+
+    $('#detailBody').innerHTML = `
+      <div class="field">
+        <span class="badge prio" style="--prio-color:${p.color};font-size:12px;padding:5px 10px">${p.label}</span>
+      </div>
+      <h2 style="font-size:19px;font-weight:800;margin:0 0 14px;line-height:1.3">${escapeHtml(t.title)}</h2>
+      <div class="field"><label>Когда</label>
+        <div style="font-size:15px;font-weight:700">${new Date(t.scheduled_at).toLocaleString('ru-RU', {day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'})}</div>
+      </div>
+      ${ddl}
+      ${note}
+      ${link}
+      <div class="btn-row">
+        <button class="btn-ghost" id="dDuplicate">Дублировать</button>
+        <button class="btn-ghost" id="dEdit">Изменить</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn-ghost" id="dIrrelevant">Неактуально</button>
+        <button class="btn-ghost danger" id="dDelete">Удалить</button>
+      </div>
+      <button class="btn-primary" id="dToggleDone" style="${isDone ? 'background:var(--bg-card);color:var(--ink-dim)' : ''}">
+        ${isDone ? 'Вернуть в работу' : 'Отметить выполненной'}
+      </button>
+    `;
+
+    $('#dToggleDone').onclick = () => { toggleDone(id); closeSheet('detailSheet'); };
+    $('#dDuplicate').onclick = () => { duplicateTask(id); closeSheet('detailSheet'); };
+    $('#dIrrelevant').onclick = () => { setStatus(id, 'irrelevant'); closeSheet('detailSheet'); };
+    $('#dDelete').onclick = () => { deleteTask(id); closeSheet('detailSheet'); };
+    $('#dEdit').onclick = () => { closeSheet('detailSheet'); openEdit(id); };
+
+    openSheet('detailSheet');
+  }
+
+  // ── Edit / create sheet ─────────────────────────────────────────────────
+  function renderPrioGrid(selected) {
+    $('#prioGrid').innerHTML = PRIORITIES.map(p => `
+      <button type="button" class="prio-opt ${p.key === selected ? 'selected' : ''}" data-key="${p.key}" style="--opt-color:${p.color}">
+        <span class="swatch" style="background:${p.color}"></span>
+        <span class="label">${p.label}</span>
+      </button>
+    `).join('');
+    $$('.prio-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        $$('.prio-opt').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+      });
+    });
+  }
+
+  function openEdit(id) {
+    editingId = id || null;
+    const t = id ? tasks.find(x => x.id === id) : null;
+
+    $('#editTitle').textContent = t ? 'Изменить задачу' : 'Новая задача';
+    $('#fTitle').value = t?.title || '';
+    $('#fNote').value = t?.note || '';
+
+    const sched = t ? new Date(t.scheduled_at) : roundToNextHalfHour(new Date());
+    $('#fDate').value = toDateInput(sched);
+    $('#fTime').value = toTimeInput(sched);
+
+    if (t?.deadline) {
+      const d = new Date(t.deadline);
+      $('#fDeadlineDate').value = toDateInput(d);
+      $('#fDeadlineTime').value = toTimeInput(d);
+    } else {
+      $('#fDeadlineDate').value = '';
+      $('#fDeadlineTime').value = '';
+    }
+
+    $('#fLink').value = t?.link || '';
+    renderPrioGrid(t?.priority || 'medium');
+
+    openSheet('editSheet');
+  }
+
+  function roundToNextHalfHour(d) {
+    const r = new Date(d);
+    r.setMinutes(r.getMinutes() + (30 - r.getMinutes() % 30), 0, 0);
+    return r;
+  }
+  function toDateInput(d) {
+    return d.toISOString().slice(0,10);
+  }
+  function toTimeInput(d) {
+    return d.toTimeString().slice(0,5);
+  }
+
+  async function saveTask() {
+    const title = $('#fTitle').value.trim();
+    if (!title) { toast('Введи название задачи'); haptic('error'); return; }
+
+    const date = $('#fDate').value;
+    const time = $('#fTime').value || '09:00';
+    if (!date) { toast('Укажи дату'); haptic('error'); return; }
+
+    const scheduled = new Date(`${date}T${time}`);
+
+    let deadline = null;
+    if ($('#fDeadlineDate').value) {
+      const dt = $('#fDeadlineTime').value || '18:00';
+      deadline = new Date(`${$('#fDeadlineDate').value}T${dt}`).toISOString();
+    }
+
+    const prioBtn = $('.prio-opt.selected');
+    const priority = prioBtn ? prioBtn.dataset.key : 'medium';
+
+    const payload = {
+      title,
+      note: $('#fNote').value.trim(),
+      scheduled_at: scheduled.toISOString(),
+      deadline,
+      priority,
+      link: $('#fLink').value.trim() || null,
+      status: 'pending',
+    };
+
+    if (!isInTelegram) {
+      // Демо-режим вне Telegram — меняем только локально
+      if (editingId) {
+        const idx = tasks.findIndex(t => t.id === editingId);
+        if (idx >= 0) tasks[idx] = { ...tasks[idx], ...payload };
+        toast('Изменения сохранены (демо)');
+      } else {
+        tasks.push({ id: 'local_' + Date.now(), ...payload });
+        toast('Задача добавлена (демо)');
+      }
+      haptic('light');
+      closeSheet('editSheet');
+      renderAll();
+      return;
+    }
+
+    if (editingId) {
+      const res = await apiCall('update', { id: editingId, task: payload });
+      if (res.ok) {
+        const idx = tasks.findIndex(t => t.id === editingId);
+        if (idx >= 0) tasks[idx] = res.task;
+        toast('Изменения сохранены');
+      } else {
+        toast('Не удалось сохранить');
+        haptic('error');
+        return;
+      }
+    } else {
+      const res = await apiCall('create', { task: payload });
+      if (res.ok) {
+        tasks.push(res.task);
+        toast('Задача добавлена');
+      } else {
+        toast('Не удалось добавить задачу');
+        haptic('error');
+        return;
+      }
+    }
+
+    haptic('light');
+    closeSheet('editSheet');
+    renderAll();
+  }
+
+  // ── Mutations ───────────────────────────────────────────────────────────
+  async function toggleDone(id) {
+    const t = tasks.find(x => x.id === id);
+    if (!t) return;
+    const newStatus = t.status === 'done' ? 'pending' : 'done';
+
+    if (!isInTelegram) {
+      t.status = newStatus;
+      haptic(newStatus === 'done' ? 'medium' : 'light');
+      toast(newStatus === 'done' ? 'Отмечено выполненным (демо)' : 'Возвращено в работу (демо)');
+      renderAll();
+      return;
+    }
+
+    const res = await apiCall('status', { id, status: newStatus });
+    if (res.ok) {
+      t.status = newStatus;
+      haptic(newStatus === 'done' ? 'medium' : 'light');
+      toast(newStatus === 'done' ? 'Отмечено выполненным' : 'Возвращено в работу');
+      renderAll();
+    } else {
+      toast('Не удалось обновить статус');
+      haptic('error');
+    }
+  }
+
+  async function setStatus(id, status) {
+    if (!isInTelegram) {
+      const t = tasks.find(x => x.id === id);
+      if (t) t.status = status;
+      toast('Помечено как неактуальное (демо)');
+      renderAll();
+      return;
+    }
+
+    const res = await apiCall('status', { id, status });
+    if (res.ok) {
+      const t = tasks.find(x => x.id === id);
+      if (t) t.status = status;
+      toast('Помечено как неактуальное');
+      renderAll();
+    } else {
+      toast('Не удалось обновить статус');
+      haptic('error');
+    }
+  }
+
+  async function deleteTask(id) {
+    if (!isInTelegram) {
+      tasks = tasks.filter(x => x.id !== id);
+      toast('Задача удалена (демо)');
+      haptic('medium');
+      renderAll();
+      return;
+    }
+
+    const res = await apiCall('delete', { id });
+    if (res.ok) {
+      tasks = tasks.filter(x => x.id !== id);
+      toast('Задача удалена');
+      haptic('medium');
+      renderAll();
+    } else {
+      toast('Не удалось удалить задачу');
+      haptic('error');
+    }
+  }
+
+  async function duplicateTask(id) {
+    if (!isInTelegram) {
+      const t = tasks.find(x => x.id === id);
+      if (t) tasks.push({ ...t, id: 'local_' + Date.now(), title: t.title + ' (копия)', status: 'pending' });
+      toast('Задача продублирована (демо)');
+      renderAll();
+      return;
+    }
+
+    const res = await apiCall('duplicate', { id });
+    if (res.ok) {
+      tasks.push(res.task);
+      toast('Задача продублирована');
+      renderAll();
+    } else {
+      toast('Не удалось дублировать задачу');
+      haptic('error');
+    }
+  }
+
+  // ── Sheets ──────────────────────────────────────────────────────────────
+  function openSheet(id) {
+    $('#backdrop').classList.add('show');
+    $('#' + id).classList.add('show');
+  }
+  function closeSheet(id) {
+    $('#backdrop').classList.remove('show');
+    $('#' + id).classList.remove('show');
+  }
+
+  $('#backdrop').addEventListener('click', () => {
+    closeSheet('detailSheet');
+    closeSheet('editSheet');
+  });
+  $('#detailClose').addEventListener('click', () => closeSheet('detailSheet'));
+  $('#editClose').addEventListener('click', () => closeSheet('editSheet'));
+  $('#saveBtn').addEventListener('click', saveTask);
+  $('#fabAdd').addEventListener('click', () => { haptic('light'); openEdit(null); });
+  $('#fabAddDesktop')?.addEventListener('click', () => openEdit(null));
+
+  // ── Voice input ──────────────────────────────────────────────────────────
+  const GROQ_KEY = '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';
+  let recognition = null;
+  let isRecording = false;
+  let voiceMode = 'task'; // 'task' | 'note'
+  let pendingVoiceTask = null;
+
+  function startVoiceInput(mode = 'task') {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast('Голосовой ввод не поддерживается в этом браузере');
+      return;
+    }
+
+    voiceMode = mode;
+    recognition = new SpeechRecognition();
+    recognition.lang = 'ru-RU';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+
+    const overlay = $('#voiceOverlay');
+    const transcript = $('#voiceTranscript');
+    const processing = $('#voiceProcessing');
+    const hint = overlay.querySelector('.voice-hint');
+    const fab = $('#fabVoice');
+
+    if (mode === 'task') {
+      hint.innerHTML = 'Говори задачу...<br><small style="font-weight:400;font-size:13px">«Заполнить карточки товара завтра до 16:00, срочно»</small>';
+    } else {
+      hint.innerHTML = 'Надиктуй примечание...<br><small style="font-weight:400;font-size:13px">Или нажми «Пропустить»</small>';
+    }
+
+    overlay.classList.add('show');
+    fab.classList.add('recording');
+    isRecording = true;
+    transcript.textContent = '';
+    processing.style.display = 'none';
+    processing.textContent = '⏳ Обрабатываю...';
+
+    // Show skip button only for note mode
+    const skipBtn = $('#voiceSkipNote');
+    if (skipBtn) skipBtn.style.display = mode === 'note' ? 'block' : 'none';
+
+    recognition.onresult = (e) => {
+      const text = Array.from(e.results).map(r => r[0].transcript).join('');
+      transcript.textContent = text;
+    };
+
+    recognition.onend = async () => {
+      if (!isRecording) return;
+      isRecording = false;
+      fab.classList.remove('recording');
+
+      const text = transcript.textContent.trim();
+      if (!text) {
+        if (mode === 'note' && pendingVoiceTask) {
+          // Тишина = пропустить примечание
+          await saveVoiceTask(pendingVoiceTask);
+          pendingVoiceTask = null;
+          overlay.classList.remove('show');
+        } else {
+          overlay.classList.remove('show');
+          toast('Ничего не распознано, попробуй ещё раз');
+        }
+        return;
+      }
+
+      if (mode === 'task') {
+        processing.style.display = 'block';
+        transcript.style.opacity = '0.4';
+
+        try {
+          const task = await structureTaskWithGroq(text);
+          pendingVoiceTask = task;
+          showNotePrompt();
+        } catch (e) {
+          overlay.classList.remove('show');
+          toast('Не удалось обработать. Попробуй ещё раз.');
+          console.error('Groq error:', e);
+        }
+      } else if (mode === 'note') {
+        const SKIP_WORDS = ['пропустить', 'пропусти', 'нет', 'без примечания', 'не надо', 'не нужно', 'сохранить', 'сохрани', 'готово', 'всё', 'хватит', 'достаточно'];
+        const lower = text.toLowerCase().trim();
+        const isSkip = SKIP_WORDS.some(w => lower.includes(w)) || lower.length < 5;
+
+        if (pendingVoiceTask) {
+          pendingVoiceTask.note = isSkip ? '' : text;
+          await saveVoiceTask(pendingVoiceTask);
+          pendingVoiceTask = null;
+        }
+        overlay.classList.remove('show');
+        transcript.style.opacity = '1';
+      }
+    };
+
+    recognition.onerror = (e) => {
+      isRecording = false;
+      fab.classList.remove('recording');
+      overlay.classList.remove('show');
+      if (e.error !== 'aborted') toast('Ошибка микрофона: ' + e.error);
+    };
+
+    recognition.start();
+  }
+
+  function showNotePrompt() {
+    const overlay = $('#voiceOverlay');
+    const hint = overlay.querySelector('.voice-hint');
+    const processing = $('#voiceProcessing');
+    const transcript = $('#voiceTranscript');
+    const noteActions = $('#voiceNoteActions');
+
+    processing.style.display = 'none';
+    transcript.style.opacity = '1';
+    transcript.textContent = `✅ ${pendingVoiceTask.title}`;
+    hint.innerHTML = 'Надиктуй примечание или скажи «Пропустить»';
+
+    if (noteActions) noteActions.style.display = 'none';
+
+    const circle = overlay.querySelector('.voice-mic-circle');
+    circle.style.animation = '';
+    circle.textContent = '🎤';
+
+    // Автоматически запускаем второй голосовой ввод через 600мс
+    setTimeout(() => {
+      if ($('#voiceOverlay').classList.contains('show')) {
+        startVoiceInput('note');
+      }
+    }, 600);
+  }
+
+  function stopVoiceInput() {
+    isRecording = false;
+    if (recognition) {
+      recognition.stop();
+      recognition = null;
+    }
+    $('#fabVoice').classList.remove('recording');
+    $('#voiceOverlay').classList.remove('show');
+    // Reset overlay state
+    const circle = $('#voiceOverlay').querySelector('.voice-mic-circle');
+    circle.style.animation = '';
+    circle.textContent = '🎤';
+    const hint = $('#voiceOverlay').querySelector('.voice-hint');
+    hint.innerHTML = 'Говори задачу...<br><small style="font-weight:400;font-size:13px">Например: «Сделать инфографику завтра до 16:00, срочно»</small>';
+    $('#voiceTranscript').textContent = '';
+    $('#voiceTranscript').style.opacity = '1';
+    $('#voiceProcessing').style.display = 'none';
+  }
+
+  async function saveVoiceTask(data) {
+    const parseDate = (dateStr) => {
+      if (!dateStr) return null;
+      const parts = dateStr.split('.');
+      if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+      return null;
+    };
+
+    const dateVal = parseDate(data.date) || toDateInput(new Date());
+    const timeVal = data.time || '09:00';
+    const scheduled = new Date(`${dateVal}T${timeVal}`);
+
+    let deadline = null;
+    if (data.deadline_date) {
+      const ddDate = parseDate(data.deadline_date);
+      const ddTime = data.deadline_time || '18:00';
+      if (ddDate) deadline = new Date(`${ddDate}T${ddTime}`).toISOString();
+    }
+
+    const payload = {
+      title: data.title,
+      note: data.note || '',
+      scheduled_at: scheduled.toISOString(),
+      deadline,
+      priority: data.priority || 'medium',
+      link: null,
+      status: 'pending',
+    };
+
+    if (!isInTelegram) {
+      tasks.push({ id: 'local_' + Date.now(), ...payload });
+      toast('Задача добавлена (демо)');
+      renderAll();
+      return;
+    }
+
+    const res = await apiCall('create', { task: payload });
+    if (res.ok) {
+      tasks.push(res.task);
+      haptic('medium');
+      toast('✅ Задача сохранена!');
+      renderAll();
+    } else {
+      toast('Не удалось сохранить задачу');
+    }
+  }
+
+  async function structureTaskWithGroq(text) {
+    const today = new Date();
+    const fmt = (d) => d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const todayStr = fmt(today);
+    const tomorrowStr = fmt(new Date(today.getTime() + 86400000));
+
+    const prompt = `Сегодня ${todayStr}. Завтра ${tomorrowStr}.
+Разбери задачу из текста. Правила:
+- title: ВСЁ содержательное название задачи целиком (не обрезай, не переносить часть в note)
+- note: ТОЛЬКО дополнительные детали которые явно указаны отдельно. Если деталей нет — пустая строка ""
+- date: дата выполнения (ДД.ММ.ГГГГ). Если не указана — сегодня ${todayStr}
+- time: время начала (ЧЧ:ММ). Если не указано — 09:00
+- deadline_date/deadline_time: дедлайн если указан ("до 16:00" = deadline_time "16:00", deadline_date = та же дата что и date). Иначе null
+- priority: "critical" если "срочно"/"очень важно", "high" если "важно", "low" если "не срочно", иначе "medium"
+
+Верни ТОЛЬКО JSON без markdown:
+{"title":"...","note":"","date":"ДД.ММ.ГГГГ","time":"ЧЧ:ММ","deadline_date":null,"deadline_time":null,"priority":"medium"}
+
+Текст: "${text}"`;
+
+    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${GROQ_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 300,
+        temperature: 0,
+      }),
+    });
+
+    if (!resp.ok) throw new Error('Groq API error: ' + resp.status);
+    const data = await resp.json();
+    const raw = data.choices[0].message.content.trim();
+    const clean = raw.replace(/```json|```/g, '').trim();
+    return JSON.parse(clean);
+  }
+
+  function openEditWithData(data) {
+    editingId = null;
+    $('#editTitle').textContent = 'Новая задача';
+
+    const parseDate = (dateStr) => {
+      if (!dateStr) return null;
+      const parts = dateStr.split('.');
+      if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+      return null;
+    };
+
+    $('#fTitle').value = data.title || '';
+    $('#fNote').value = data.note || '';
+    $('#fDate').value = parseDate(data.date) || toDateInput(new Date());
+    $('#fTime').value = data.time || '09:00';
+    $('#fDeadlineDate').value = parseDate(data.deadline_date) || '';
+    $('#fDeadlineTime').value = data.deadline_time || '';
+    $('#fLink').value = '';
+    renderPrioGrid(data.priority || 'medium');
+
+    openSheet('editSheet');
+  }
+
+  $('#fabVoice').addEventListener('click', () => {
+    haptic('light');
+    if (isRecording) {
+      stopVoiceInput();
+    } else {
+      startVoiceInput('task');
+    }
+  });
+
+  $('#voiceCancel').addEventListener('click', () => {
+    pendingVoiceTask = null;
+    stopVoiceInput();
+  });
+
+  // ── View / filter switching ─────────────────────────────────────────────
+  function setView(newView) {
+    view = newView;
+    $$('.switch button, .nav-item[data-view]').forEach(b => {
+      b.classList.toggle('active', b.dataset.view === view);
+    });
+    $('#listView').style.display = view === 'list' ? '' : 'none';
+    $('#calendarView').style.display = view === 'calendar' ? '' : 'none';
+    renderCalendarStrip();
+    renderTimeline();
+  }
+
+  $$('.switch button, .nav-item[data-view]').forEach(btn => {
+    btn.addEventListener('click', () => setView(btn.dataset.view));
+  });
+
+  function setFilter(newFilter) {
+    filter = newFilter;
+    $$('.chip, .chip-vert').forEach(c => {
+      c.classList.toggle('active', c.dataset.filter === filter);
+    });
+    renderAll();
+  }
+
+  $('#filterChips').addEventListener('click', (e) => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    setFilter(chip.dataset.filter);
+  });
+
+  $$('.chip-vert').forEach(chip => {
+    chip.addEventListener('click', () => setFilter(chip.dataset.filter));
+  });
+
+  // ── Loading ──────────────────────────────────────────────────────────────
+  async function loadTasks() {
+    if (!isInTelegram) {
+      // Открыто не из Telegram — показываем демо-данные для просмотра дизайна
+      tasks = seedTasks();
+      return;
+    }
+
+    const res = await apiList();
+    if (res.ok) {
+      tasks = res.tasks;
+    } else {
+      tasks = [];
+      toast('Не удалось загрузить задачи');
+    }
+  }
+
+  // ── Render orchestration ────────────────────────────────────────────────
+  function renderAll() {
+    renderHeader();
+    renderList();
+    renderCalendarStrip();
+    renderTimeline();
+  }
+
+  // ── Init ────────────────────────────────────────────────────────────────
+  (async function init() {
+    await loadTasks();
+    renderAll();
+
+    // Запрашиваем доступ к микрофону один раз при загрузке
+    // чтобы браузер не спрашивал каждый раз при нажатии 🎤
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(t => t.stop()); // сразу останавливаем, нам нужно только разрешение
+    } catch (e) {
+      // Пользователь отказал или браузер не поддерживает — не критично
+    }
+
+    if (tg) {
+      try {
+        tg.setHeaderColor('#15171c');
+        tg.setBackgroundColor('#15171c');
+      } catch (e) {}
+    }
+  })();
+
+})();
+</script>
+</body>
+</html>
