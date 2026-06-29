@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8">
+<!-- saved from url=(0047)file:///C:/Users/100nout/Downloads/index_3.html -->
+<html lang="ru" style="--tg-viewport-height: 100vh; --tg-viewport-stable-height: 100vh;"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Задачи</title>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="./index_files/telegram-web-app.js.Без названия"></script>
 <style>
   @font-face {
     font-family: 'Manrope';
@@ -1070,12 +1070,12 @@
   <div class="topbar">
     <div class="topbar-row">
       <div>
-        <div class="eyebrow" id="dateEyebrow">—</div>
+        <div class="eyebrow" id="dateEyebrow">понедельник, 29 июня</div>
         <h1 class="title-xl">Задачи</h1>
       </div>
-      <div class="stat-pill" id="urgentPill">
+      <div class="stat-pill" id="urgentPill" style="opacity: 1;">
         <span class="dot"></span>
-        <span id="urgentCount">0</span> срочных
+        <span id="urgentCount">2</span> срочных
       </div>
     </div>
 
@@ -1087,10 +1087,10 @@
   </div>
 
   <div class="desktop-header">
-    <div class="eyebrow" id="dateEyebrowDesktop">—</div>
-    <div class="stat-pill" id="urgentPillDesktop">
+    <div class="eyebrow" id="dateEyebrowDesktop">понедельник, 29 июня</div>
+    <div class="stat-pill" id="urgentPillDesktop" style="opacity: 1;">
       <span class="dot"></span>
-      <span id="urgentCountDesktop">0</span> срочных
+      <span id="urgentCountDesktop">2</span> срочных
     </div>
   </div>
 
@@ -1105,13 +1105,188 @@
   <div class="desktop-split">
     <div>
       <div class="pane-title">Список задач</div>
-      <div id="listView"></div>
+      <div id="listView"><div class="day-group">
+          <div class="day-label">
+            <span class="name">Сегодня</span>
+            <span class="count">2 задачи</span>
+          </div>
+          
+      <div class="task-card " style="--prio-color:var(--critical)" data-id="demo_nnkw259q38b">
+        <div class="task-time-col">
+          <div class="hm">16:00</div>
+          <div class="ddl">до 16:00</div>
+        </div>
+        <div class="task-body" data-action="open">
+          <p class="task-title">Сделать инфографику карточки товара</p>
+          <p class="task-note">Артикул KS-221, 4 слайда, чёрный фон</p>
+          <div class="task-meta">
+            <span class="badge prio">Критично</span>
+            
+          </div>
+        </div>
+        <div class="task-actions">
+          <button class="icon-btn check " data-action="toggle-done">✓</button>
+          <button class="icon-btn" data-action="open">⋯</button>
+        </div>
+      </div>
+      <div class="task-card " style="--prio-color:var(--high)" data-id="demo_zrxsyevwqpo">
+        <div class="task-time-col">
+          <div class="hm">18:30</div>
+          <div class="ddl">до 22:30</div>
+        </div>
+        <div class="task-body" data-action="open">
+          <p class="task-title">Договор с поставщиком ткани</p>
+          <p class="task-note">Согласовать пункт про сроки доставки</p>
+          <div class="task-meta">
+            <span class="badge prio">Высокий</span>
+            
+          </div>
+        </div>
+        <div class="task-actions">
+          <button class="icon-btn check " data-action="toggle-done">✓</button>
+          <button class="icon-btn" data-action="open">⋯</button>
+        </div>
+      </div>
+        </div><div class="day-group">
+          <div class="day-label">
+            <span class="name">Завтра</span>
+            <span class="count">2 задачи</span>
+          </div>
+          
+      <div class="task-card " style="--prio-color:var(--medium)" data-id="demo_3r219h3kypp">
+        <div class="task-time-col">
+          <div class="hm">10:00</div>
+          
+        </div>
+        <div class="task-body" data-action="open">
+          <p class="task-title">Обновить прайс на сайте</p>
+          
+          <div class="task-meta">
+            <span class="badge prio">Средний</span>
+            <span class="badge link">🔗 Ссылка</span>
+          </div>
+        </div>
+        <div class="task-actions">
+          <button class="icon-btn check " data-action="toggle-done">✓</button>
+          <button class="icon-btn" data-action="open">⋯</button>
+        </div>
+      </div>
+      <div class="task-card " style="--prio-color:var(--low)" data-id="demo_klex1e9t1wr">
+        <div class="task-time-col">
+          <div class="hm">14:00</div>
+          
+        </div>
+        <div class="task-body" data-action="open">
+          <p class="task-title">Снять видео для рилс</p>
+          <p class="task-note">Студия, 2 модели, реквизит</p>
+          <div class="task-meta">
+            <span class="badge prio">Низкий</span>
+            
+          </div>
+        </div>
+        <div class="task-actions">
+          <button class="icon-btn check " data-action="toggle-done">✓</button>
+          <button class="icon-btn" data-action="open">⋯</button>
+        </div>
+      </div>
+        </div></div>
     </div>
     <div class="pane-divider">
       <div class="pane-title">Календарь</div>
       <div id="calendarView" class="cal-wrap" style="display:none">
-        <div class="cal-strip" id="calStrip"></div>
-        <div class="timeline" id="timeline"></div>
+        <div class="cal-strip" id="calStrip"><button class="cal-day  " data-date="2026-06-25T21:00:00.000Z">
+        <span class="dow">ПТ</span>
+        <span class="num">26</span>
+        <span class="dots"></span>
+      </button><button class="cal-day  " data-date="2026-06-26T21:00:00.000Z">
+        <span class="dow">СБ</span>
+        <span class="num">27</span>
+        <span class="dots"></span>
+      </button><button class="cal-day  " data-date="2026-06-27T21:00:00.000Z">
+        <span class="dow">ВС</span>
+        <span class="num">28</span>
+        <span class="dots"></span>
+      </button><button class="cal-day selected today" data-date="2026-06-28T21:00:00.000Z">
+        <span class="dow">ПН</span>
+        <span class="num">29</span>
+        <span class="dots"><span style="background:var(--critical)"></span><span style="background:var(--high)"></span></span>
+      </button><button class="cal-day  " data-date="2026-06-29T21:00:00.000Z">
+        <span class="dow">ВТ</span>
+        <span class="num">30</span>
+        <span class="dots"><span style="background:var(--medium)"></span><span style="background:var(--low)"></span></span>
+      </button><button class="cal-day  " data-date="2026-06-30T21:00:00.000Z">
+        <span class="dow">СР</span>
+        <span class="num">1</span>
+        <span class="dots"></span>
+      </button><button class="cal-day  " data-date="2026-07-01T21:00:00.000Z">
+        <span class="dow">ЧТ</span>
+        <span class="num">2</span>
+        <span class="dots"></span>
+      </button><button class="cal-day  " data-date="2026-07-02T21:00:00.000Z">
+        <span class="dow">ПТ</span>
+        <span class="num">3</span>
+        <span class="dots"></span>
+      </button><button class="cal-day  " data-date="2026-07-03T21:00:00.000Z">
+        <span class="dow">СБ</span>
+        <span class="num">4</span>
+        <span class="dots"></span>
+      </button><button class="cal-day  " data-date="2026-07-04T21:00:00.000Z">
+        <span class="dow">ВС</span>
+        <span class="num">5</span>
+        <span class="dots"></span>
+      </button><button class="cal-day  " data-date="2026-07-05T21:00:00.000Z">
+        <span class="dow">ПН</span>
+        <span class="num">6</span>
+        <span class="dots"></span>
+      </button><button class="cal-day  " data-date="2026-07-06T21:00:00.000Z">
+        <span class="dow">ВТ</span>
+        <span class="num">7</span>
+        <span class="dots"></span>
+      </button><button class="cal-day  " data-date="2026-07-07T21:00:00.000Z">
+        <span class="dow">СР</span>
+        <span class="num">8</span>
+        <span class="dots"></span>
+      </button><button class="cal-day  " data-date="2026-07-08T21:00:00.000Z">
+        <span class="dow">ЧТ</span>
+        <span class="num">9</span>
+        <span class="dots"></span>
+      </button></div>
+        <div class="timeline" id="timeline"><div class="hour-row">
+        <div class="hr-label">15:00</div>
+        <div class="hr-line">
+          
+        </div>
+      </div><div class="hour-row">
+        <div class="hr-label">16:00</div>
+        <div class="hr-line">
+          <div class="tl-card " style="--prio-color:var(--critical)" data-id="demo_nnkw259q38b">
+      <span class="hm-small">16:00</span>
+      <div class="tbody">
+        <p class="ttitle">Сделать инфографику карточки товара</p>
+      </div>
+    </div>
+        </div>
+      </div><div class="hour-row">
+        <div class="hr-label">17:00</div>
+        <div class="hr-line">
+          
+        </div>
+      </div><div class="hour-row">
+        <div class="hr-label">18:00</div>
+        <div class="hr-line">
+          <div class="tl-card " style="--prio-color:var(--high)" data-id="demo_zrxsyevwqpo">
+      <span class="hm-small">18:30</span>
+      <div class="tbody">
+        <p class="ttitle">Договор с поставщиком ткани</p>
+      </div>
+    </div>
+        </div>
+      </div><div class="hour-row">
+        <div class="hr-label">19:00</div>
+        <div class="hr-line">
+          
+        </div>
+      </div></div>
       </div>
     </div>
   </div>
@@ -2146,19 +2321,31 @@
     $$('.switch button, .nav-item[data-view]').forEach(b => {
       b.classList.toggle('active', b.dataset.view === view);
     });
-    $('#listView').style.display    = (view === 'list')     ? '' : 'none';
+
+    const isTeam = view === 'team';
+
+    // На десктопе Список+Календарь живут в .desktop-split — его надо прятать для Команды
+    const split = document.querySelector('.desktop-split');
+    if (split) split.style.display = isTeam ? 'none' : '';
+
+    // setProperty с 'important' нужен, т.к. в CSS у #listView есть !important
+    const listView = $('#listView');
+    if (listView) listView.style.setProperty('display', (view === 'list' || !isTeam) ? 'block' : 'none', 'important');
+
     $('#calendarView').style.display = (view === 'calendar') ? '' : 'none';
-    $('#teamView').style.display    = (view === 'team')     ? '' : 'none';
-    // Hide filter chips and FABs on team view
-    const hideForTeam = view === 'team';
-    $('#filterChips').style.display = hideForTeam ? 'none' : '';
-    $('#fabAdd').style.display   = hideForTeam ? 'none' : '';
-    $('#fabVoice').style.display = hideForTeam ? 'none' : '';
+    $('#teamView').style.display     = isTeam ? 'block' : 'none';
+
+    // Прячем фильтры и FAB-кнопки на вкладке Команда
+    $('#filterChips').style.display = isTeam ? 'none' : '';
+    const fabAdd = $('#fabAdd'), fabVoice = $('#fabVoice');
+    if (fabAdd)   fabAdd.style.display   = isTeam ? 'none' : '';
+    if (fabVoice) fabVoice.style.display = isTeam ? 'none' : '';
+
     if (view === 'calendar') {
       renderCalendarStrip();
       renderTimeline();
     }
-    if (view === 'team') {
+    if (isTeam) {
       loadAndRenderTeam();
     }
   }
@@ -2453,5 +2640,6 @@
 
 })();
 </script>
-</body>
-</html>
+
+
+</body></html>
