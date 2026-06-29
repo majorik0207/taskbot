@@ -2215,15 +2215,6 @@
     await loadTasks();
     renderAll();
 
-    // Запрашиваем доступ к микрофону один раз при загрузке
-    // чтобы браузер не спрашивал каждый раз при нажатии 🎤
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach(t => t.stop()); // сразу останавливаем, нам нужно только разрешение
-    } catch (e) {
-      // Пользователь отказал или браузер не поддерживает — не критично
-    }
-
     if (tg) {
       try {
         tg.setHeaderColor('#15171c');
