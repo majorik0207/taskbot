@@ -346,6 +346,9 @@ def application(environ, start_response):
             body = json.loads(raw_body.decode('utf-8')) if raw_body else {}
         except Exception as e:
             return respond('400 Bad Request', {'ok': False, 'error': 'invalid_json'})
+        # initData может прийти в query (фолбэк для клиентов, где тело POST теряется)
+        if not body.get('initData') and query.get('initData'):
+            body['initData'] = query['initData']
 
     if action not in HANDLERS:
         return respond('404 Not Found', {'ok': False, 'error': 'unknown_action'})
