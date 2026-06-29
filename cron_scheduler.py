@@ -192,6 +192,45 @@ async def run():
 
     print(f"✅ CRON выполнен: {current_time.astimezone(TIMEZONE).strftime('%d.%m.%Y %H:%M')}")
 
+    # ── 5. Отправка заданий сотрудникам ──────────────────────────────────────
+    pending_assignments = db.get_pending_assignments_to_send()
+    for asgn in pending_assignments:
+        member_user_id = asgn.get('member_user_id')
+        if not member_user_id:
+            # Сотрудник ещё не писал боту — пропускаем
+            print(f"⚠️  Assignment {asgn['id']}: сотрудник @{asgn['member_username']} не активировал бота")
+            continue
+
+        time_display = fmt_local(asgn['scheduled_at'])
+        member_name = asgn.get('member_name') or f"@{asgn['member_username']}"
+        member_role = asgn.get('member_role', '')
+
+        text = (
+            f"📋 <b>Вам поставлена задача!</b>\n\n"
+            f"<b>{asgn['title']}</b>\n"
+            f"📅 {time_display}"
+        )
+        if asgn.get('note'):
+            text += f"\n\n📝 <i>{asgn['note']}</i>"
+
+        from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+        kb = InlineKeyboardMarkup([[
+            InlineKeyboardButton("✅ Принял",   callback_data=f"assign_accept:{asgn['id']}"),
+            InlineKeyboardButton("❌ Не могу",  callback_data=f"assign_decline:{asgn['id']}"),
+        ]])
+
+        try:
+            await bot.send_message(
+                chat_id=member_user_id,
+                text=text,
+                parse_mode=ParseMode.HTML,
+                reply_markup=kb,
+            )
+            db.mark_assignment_sent(asgn['id'])
+            print(f"✅ Assignment {asgn['id']} отправлен пользователю {member_user_id}")
+        except Exception as e:
+            print(f"❌ Ошибка отправки assignment {asgn['id']}: {e}")
+
 
 if __name__ == '__main__':
     asyncio.run(run())

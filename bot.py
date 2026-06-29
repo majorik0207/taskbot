@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 
 from telegram import (
     Update, InlineKeyboardButton, InlineKeyboardMarkup,
-    ReplyKeyboardMarkup, KeyboardButton
+    ReplyKeyboardMarkup, KeyboardButton, WebAppInfo
 )
 from telegram.ext import (
     Application, CommandHandler, MessageHandler, CallbackQueryHandler,
@@ -37,6 +37,7 @@ PRIORITY = {
 }
 
 TIMEZONE = ZoneInfo(os.getenv("TIMEZONE", "Europe/Moscow"))
+WEBAPP_URL = os.getenv("WEBAPP_URL", "https://bot.meduzacrystal.by/index.html")
 
 db = Database("tasks.db")
 scheduler: TaskScheduler = None
@@ -91,23 +92,10 @@ def task_keyboard(task: dict) -> InlineKeyboardMarkup:
         InlineKeyboardButton("🚫 Неактуально", callback_data=f"irrelevant:{tid}"),
     ]
     row2 = [
-        InlineKeyboardButton("✏️ Редактировать", callback_data=f"edit:{tid}"),
-        InlineKeyboardButton("📋 Дублировать",   callback_data=f"dup:{tid}"),
-    ]
-    row3 = [
         InlineKeyboardButton("📅 Перенести",    callback_data=f"reschedule:{tid}"),
         InlineKeyboardButton("🗑 Удалить",      callback_data=f"delete:{tid}"),
     ]
-    return InlineKeyboardMarkup([row1, row2, row3])
-
-
-def main_keyboard() -> ReplyKeyboardMarkup:
-    kb = [
-        [KeyboardButton("➕ Новая задача"),  KeyboardButton("📋 Мои задачи")],
-        [KeyboardButton("📅 Календарь"),     KeyboardButton("🔍 Срочные")],
-        [KeyboardButton("🎤 Голосовая задача")],
-    ]
-    return ReplyKeyboardMarkup(kb, resize_keyboard=True)
+    return InlineKeyboardMarkup([row1, row2])
 
 
 # ─── /start ────────────────────────────────────────────────────────────────────
@@ -115,12 +103,17 @@ def main_keyboard() -> ReplyKeyboardMarkup:
 async def cmd_start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     db.ensure_user(user.id, user.first_name)
+
+    # Привязываем user_id к записи в team_members по username
+    if user.username:
+        db.link_member_user_id(user.username, user.id, user.first_name)
+
     await update.message.reply_text(
         f"👋 Привет, <b>{user.first_name}</b>!\n\n"
-        "Я помогу управлять твоими задачами прямо в Telegram.\n\n"
-        "Нажми <b>➕ Новая задача</b> — добавим первую!",
+        "Здесь будут приходить уведомления о твоих задачах.\n\n"
+        "Все задачи создаются и редактируются в приложении — "
+        "открой его кнопкой <b>«ЗАДАЧИ»</b> рядом с полем ввода.",
         parse_mode=ParseMode.HTML,
-        reply_markup=main_keyboard(),
     )
 
 
@@ -614,20 +607,6 @@ async def handle_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             reply_markup=task_keyboard(updated),
         )
 
-    elif action == "edit":
-        kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("📌 Название",   callback_data=f"ef:title:{tid}"),
-             InlineKeyboardButton("📝 Примечание", callback_data=f"ef:note:{tid}")],
-            [InlineKeyboardButton("📅 Дату/время", callback_data=f"ef:datetime:{tid}"),
-             InlineKeyboardButton("⏰ Дедлайн",    callback_data=f"ef:deadline:{tid}")],
-            [InlineKeyboardButton("🏷 Приоритет",  callback_data=f"ef:priority:{tid}"),
-             InlineKeyboardButton("🔗 Ссылку",     callback_data=f"ef:link:{tid}")],
-        ])
-        await query.edit_message_text(
-            f"✏️ Что изменить в «{task['title']}»?",
-            reply_markup=kb,
-        )
-
 
 async def edit_field(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -702,6 +681,9 @@ async def receive_edit_value(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 async def text_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
+    # Проверяем ожидание причины отказа от задания
+    if await receive_decline_reason(update, ctx):
+        return
     if ctx.user_data.get("awaiting_edit"):
         return await receive_edit_value(update, ctx)
     if ctx.user_data.get("awaiting_reschedule"):
@@ -750,71 +732,115 @@ async def handle_photo(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("🖼 Фото прикреплено к задаче!")
 
 
+# ─── Assignment responses (from team members) ──────────────────────────────────
+
+# State для ожидания причины отказа
+AWAITING_DECLINE = "awaiting_decline_for"
+
+
+async def handle_assignment_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    """Обрабатывает ✅ Принял / ❌ Не могу от сотрудников."""
+    query = update.callback_query
+    await query.answer()
+    action, aid = query.data.split(":", 1)
+    aid = int(aid)
+    assignment = db.get_assignment(aid)
+    if not assignment:
+        await query.edit_message_text("❌ Задание не найдено.")
+        return
+
+    if action == "assign_accept":
+        db.update_assignment_status(aid, "accepted")
+        await query.edit_message_text(
+            f"✅ <b>Принято!</b>\n\n{assignment['title']}\n\n"
+            "Ответ зафиксирован.",
+            parse_mode=ParseMode.HTML,
+        )
+        # Уведомляем владельца
+        member = db.get_member(assignment["member_id"])
+        if member:
+            name = member.get("name") or f"@{member['username']}"
+            role = f" ({member['role']})" if member.get("role") else ""
+            try:
+                await ctx.bot.send_message(
+                    chat_id=assignment["owner_id"],
+                    text=(
+                        f"✅ <b>{name}{role}</b> принял задание:\n"
+                        f"<i>{assignment['title']}</i>"
+                    ),
+                    parse_mode=ParseMode.HTML,
+                )
+            except Exception as e:
+                logger.warning(f"Не удалось уведомить владельца: {e}")
+
+    elif action == "assign_decline":
+        # Просим написать причину
+        ctx.user_data[AWAITING_DECLINE] = aid
+        await query.edit_message_text(
+            f"❌ Задание: <b>{assignment['title']}</b>\n\n"
+            "Напишите причину, почему не можете выполнить задачу:",
+            parse_mode=ParseMode.HTML,
+        )
+
+
+async def receive_decline_reason(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> bool:
+    """Перехватывает текст как причину отказа. Возвращает True если обработал."""
+    aid = ctx.user_data.get(AWAITING_DECLINE)
+    if not aid:
+        return False
+    reason = update.message.text.strip()
+    if not reason:
+        await update.message.reply_text("Пожалуйста, напишите причину:")
+        return True
+
+    ctx.user_data.pop(AWAITING_DECLINE, None)
+    db.update_assignment_status(aid, "declined", decline_reason=reason)
+
+    assignment = db.get_assignment(aid)
+    await update.message.reply_text(
+        "Принято. Причина записана.",
+        parse_mode=ParseMode.HTML,
+    )
+
+    # Уведомляем владельца с причиной
+    if assignment:
+        member = db.get_member(assignment["member_id"])
+        if member:
+            name = member.get("name") or f"@{member['username']}"
+            role = f" ({member['role']})" if member.get("role") else ""
+            try:
+                await ctx.bot.send_message(
+                    chat_id=assignment["owner_id"],
+                    text=(
+                        f"❌ <b>{name}{role}</b> отказался от задания:\n"
+                        f"<i>{assignment['title']}</i>\n\n"
+                        f"📝 Причина: {reason}"
+                    ),
+                    parse_mode=ParseMode.HTML,
+                )
+            except Exception as e:
+                logger.warning(f"Не удалось уведомить владельца: {e}")
+    return True
+
+
 # ─── Build app ─────────────────────────────────────────────────────────────────
 
-def build_app(token: str, sched: TaskScheduler = None) -> Application:
+def build_app(token: str, sched: TaskScheduler = None, persistence_path: str = None) -> Application:
     global scheduler
     scheduler = sched
 
-    app = Application.builder().token(token).build()
+    builder = Application.builder().token(token)
 
-    conv = ConversationHandler(
-        entry_points=[
-            MessageHandler(filters.Regex("^➕ Новая задача$"), new_task_start),
-            CommandHandler("new", new_task_start),
-        ],
-        states={
-            TASK_TITLE:    [MessageHandler(filters.TEXT & ~filters.COMMAND, got_title)],
-            TASK_NOTE:     [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, got_note),
-                CallbackQueryHandler(skip_note, pattern="^skip_note$"),
-            ],
-            TASK_DATE:     [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, got_date),
-                CallbackQueryHandler(got_quick_date, pattern="^qdate:"),
-            ],
-            TASK_TIME:     [MessageHandler(filters.TEXT & ~filters.COMMAND, got_time)],
-            TASK_DEADLINE: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, got_deadline),
-                CallbackQueryHandler(skip_deadline, pattern="^skip_deadline$"),
-            ],
-            TASK_PRIORITY: [CallbackQueryHandler(got_priority, pattern="^pri:")],
-            TASK_LINK:     [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, got_link),
-                CallbackQueryHandler(skip_link, pattern="^skip_link$"),
-            ],
-            TASK_CONFIRM:  [
-                CallbackQueryHandler(confirm_save,   pattern="^confirm_save$"),
-                CallbackQueryHandler(confirm_cancel, pattern="^confirm_cancel$"),
-            ],
-        },
-        fallbacks=[CommandHandler("cancel", confirm_cancel)],
-        allow_reentry=True,
-    )
+    if persistence_path:
+        from telegram.ext import PicklePersistence
+        persistence = PicklePersistence(filepath=persistence_path)
+        builder = builder.persistence(persistence)
 
-    voice_conv = ConversationHandler(
-        entry_points=[
-            MessageHandler(filters.Regex("^🎤 Голосовая задача$"), voice_start),
-            CommandHandler("voice", voice_start),
-        ],
-        states={
-            TASK_CONFIRM: [
-                CallbackQueryHandler(confirm_save,   pattern="^confirm_save$"),
-                CallbackQueryHandler(confirm_cancel, pattern="^confirm_cancel$"),
-            ],
-        },
-        fallbacks=[CommandHandler("cancel", confirm_cancel)],
-    )
+    app = builder.build()
 
     app.add_handler(CommandHandler("start", cmd_start))
-    app.add_handler(conv)
-    app.add_handler(voice_conv)
-    app.add_handler(MessageHandler(filters.VOICE, handle_voice))
-    app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
-    app.add_handler(CallbackQueryHandler(handle_action, pattern="^(done|irrelevant|delete|del_confirm|del_cancel|dup|reschedule|rq|edit):"))
-    app.add_handler(CallbackQueryHandler(edit_field,        pattern="^ef:"))
-    app.add_handler(CallbackQueryHandler(edit_priority_set, pattern="^ep:"))
-    app.add_handler(CallbackQueryHandler(list_week_detail,  pattern="^list_week$"))
+    app.add_handler(CallbackQueryHandler(handle_action, pattern="^(done|irrelevant|delete|del_confirm|del_cancel|dup|reschedule|rq):"))
+    app.add_handler(CallbackQueryHandler(handle_assignment_action, pattern="^(assign_accept|assign_decline):"))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_router))
 
     return app

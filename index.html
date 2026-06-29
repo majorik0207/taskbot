@@ -934,6 +934,110 @@
     opacity: 1;
     transform: translateX(-50%) translateY(0);
   }
+  /* ── Team section ────────────────────────────────────────────────────── */
+
+  #teamView { padding: 0 16px 24px; display: none; }
+
+  .team-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 20px 0 8px;
+  }
+
+  .member-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .member-card:hover { background: var(--bg-raised); }
+
+  .member-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 800;
+    color: var(--accent-ink);
+    flex-shrink: 0;
+  }
+  .member-avatar.inactive { background: var(--bg-raised); color: var(--ink-faint); }
+
+  .member-info { flex: 1; min-width: 0; }
+  .member-info .mname {
+    font-weight: 700; font-size: 15px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .member-info .mrole {
+    font-size: 12px; color: var(--ink-dim); margin-top: 1px;
+  }
+  .member-status-badge {
+    font-size: 11px; font-weight: 700;
+    padding: 3px 8px; border-radius: 20px;
+    flex-shrink: 0;
+  }
+  .member-status-badge.active   { background: #1a3a1f; color: #4ad97a; }
+  .member-status-badge.inactive { background: var(--bg-raised); color: var(--ink-faint); }
+
+  .assignment-row {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    margin-bottom: 6px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .assignment-row .arow-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    margin-top: 5px; flex-shrink: 0;
+  }
+  .assignment-row .arow-body { flex: 1; min-width: 0; }
+  .assignment-row .arow-title { font-weight: 700; font-size: 14px; }
+  .assignment-row .arow-meta  { font-size: 12px; color: var(--ink-dim); margin-top: 2px; }
+  .assignment-row .arow-decline {
+    font-size: 11px; color: var(--critical); margin-top: 3px;
+  }
+  .assignment-row .arow-del {
+    background: none; border: none; color: var(--ink-faint);
+    cursor: pointer; font-size: 16px; padding: 0 0 0 8px; flex-shrink: 0;
+  }
+  .assignment-row .arow-del:hover { color: var(--critical); }
+
+  .assign-status-pending  { background: #1d2a1d; color: #4ad97a; }
+  .assign-status-accepted { background: #1a3a1f; color: #4ad97a; }
+  .assign-status-declined { background: #2a1a1a; color: var(--critical); }
+  .assign-status-done     { background: #1a2d1a; color: #7fe89a; }
+
+  .assign-status-badge {
+    font-size: 11px; font-weight: 700;
+    padding: 2px 8px; border-radius: 20px; white-space: nowrap;
+  }
+
+  .team-add-btn {
+    width: 100%; padding: 14px;
+    background: var(--bg-card); border: 1.5px dashed var(--line);
+    border-radius: var(--radius-md); color: var(--ink-dim);
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    margin-top: 4px; transition: border-color .15s, color .15s;
+  }
+  .team-add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Team sheets */
+  #memberSheet .sheet-body .field label { font-size: 12px; font-weight: 700; color: var(--ink-dim); }
+
+  #assignSheet .assign-member-name {
+    font-weight: 700; font-size: 16px; margin-bottom: 16px;
+  }
+
 </style>
 </head>
 <body>
@@ -947,6 +1051,9 @@
     </button>
     <button class="nav-item" data-view="calendar">
       <span class="glyph">▦</span> Календарь
+    </button>
+    <button class="nav-item" data-view="team">
+      <span class="glyph">👥</span> Команда
     </button>
 
     <div class="nav-section-label">Приоритет</div>
@@ -975,6 +1082,7 @@
     <div class="switch">
       <button class="active" data-view="list">Список</button>
       <button data-view="calendar">Календарь</button>
+      <button data-view="team">Команда</button>
     </div>
   </div>
 
@@ -1007,6 +1115,8 @@
       </div>
     </div>
   </div>
+
+  <div id="teamView"></div>
 
   </div>
 </div>
@@ -1082,6 +1192,62 @@
   </div>
 </div>
 
+<!-- Add / edit member sheet -->
+<div class="sheet" id="memberSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <h2 id="memberSheetTitle">Добавить сотрудника</h2>
+    <button class="sheet-close" id="memberSheetClose">✕</button>
+  </div>
+  <div class="sheet-body">
+    <div class="field">
+      <label>Username в Telegram</label>
+      <input type="text" id="mUsername" placeholder="@username">
+    </div>
+    <div class="field">
+      <label>Имя</label>
+      <input type="text" id="mName" placeholder="Иванова Мария">
+    </div>
+    <div class="field">
+      <label>Должность</label>
+      <input type="text" id="mRole" placeholder="Бухгалтер">
+    </div>
+    <button class="btn-primary" id="memberSaveBtn">Сохранить</button>
+    <button class="btn-secondary" id="memberDeleteBtn" style="display:none;margin-top:10px;width:100%;padding:14px;background:none;border:1.5px solid var(--critical);border-radius:var(--radius-md);color:var(--critical);font-size:14px;font-weight:700;cursor:pointer;">Удалить сотрудника</button>
+  </div>
+</div>
+
+<!-- Assign task to member sheet -->
+<div class="sheet" id="assignSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <h2>Поставить задачу</h2>
+    <button class="sheet-close" id="assignSheetClose">✕</button>
+  </div>
+  <div class="sheet-body">
+    <div class="assign-member-name" id="assignMemberName"></div>
+    <div class="field">
+      <label>Задача</label>
+      <input type="text" id="aTitle" placeholder="Подготовить отчёт за квартал">
+    </div>
+    <div class="field">
+      <label>Примечание</label>
+      <textarea id="aNote" placeholder="Детали, требования…" style="min-height:80px"></textarea>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Дата отправки</label>
+        <input type="date" id="aDate">
+      </div>
+      <div class="field">
+        <label>Время</label>
+        <input type="time" id="aTime">
+      </div>
+    </div>
+    <button class="btn-primary" id="assignSaveBtn">Поставить задачу</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1136,6 +1302,28 @@
     }
   }
 
+  // ── Team API ────────────────────────────────────────────────────────────
+  async function apiTeamList() {
+    const url = `${API_URL}?action=team_list&initData=${encodeURIComponent(initData)}`;
+    try { return await (await fetch(url)).json(); }
+    catch (e) { return { ok: false, error: 'network' }; }
+  }
+  async function apiTeamAddMember(username, name, role) {
+    return apiCall('team_add_member', { username, name, role });
+  }
+  async function apiTeamUpdateMember(member_id, name, role) {
+    return apiCall('team_update_member', { member_id, name, role });
+  }
+  async function apiTeamDeleteMember(member_id) {
+    return apiCall('team_delete_member', { member_id });
+  }
+  async function apiTeamAssign(member_id, title, note, scheduled_at) {
+    return apiCall('team_assign', { member_id, title, note, scheduled_at });
+  }
+  async function apiTeamDeleteAssignment(assignment_id) {
+    return apiCall('team_delete_assignment', { assignment_id });
+  }
+
   // ── Demo seed — используется только вне Telegram (для просмотра дизайна) ─
   function seedTasks() {
     const today = new Date();
@@ -1165,6 +1353,10 @@
   }
 
   let tasks = [];
+  let teamMembers = [];
+  let teamAssignments = [];
+  let editingMemberId = null;
+  let assigningMemberId = null;
   let view = 'list';
   let filter = 'all';
   let selectedDate = new Date();
@@ -1954,10 +2146,21 @@
     $$('.switch button, .nav-item[data-view]').forEach(b => {
       b.classList.toggle('active', b.dataset.view === view);
     });
-    $('#listView').style.display = view === 'list' ? '' : 'none';
-    $('#calendarView').style.display = view === 'calendar' ? '' : 'none';
-    renderCalendarStrip();
-    renderTimeline();
+    $('#listView').style.display    = (view === 'list')     ? '' : 'none';
+    $('#calendarView').style.display = (view === 'calendar') ? '' : 'none';
+    $('#teamView').style.display    = (view === 'team')     ? '' : 'none';
+    // Hide filter chips and FABs on team view
+    const hideForTeam = view === 'team';
+    $('#filterChips').style.display = hideForTeam ? 'none' : '';
+    $('#fabAdd').style.display   = hideForTeam ? 'none' : '';
+    $('#fabVoice').style.display = hideForTeam ? 'none' : '';
+    if (view === 'calendar') {
+      renderCalendarStrip();
+      renderTimeline();
+    }
+    if (view === 'team') {
+      loadAndRenderTeam();
+    }
   }
 
   $$('.switch button, .nav-item[data-view]').forEach(btn => {
@@ -2028,6 +2231,234 @@
       } catch (e) {}
     }
   })();
+
+  // ── Team section ────────────────────────────────────────────────────────
+
+  const ASSIGN_STATUS = {
+    pending:  { label: '⏳ Ожидает',   cls: 'assign-status-pending' },
+    accepted: { label: '✅ Принял',    cls: 'assign-status-accepted' },
+    declined: { label: '❌ Отказался', cls: 'assign-status-declined' },
+    done:     { label: '✔ Готово',    cls: 'assign-status-done' },
+  };
+
+  async function loadAndRenderTeam() {
+    if (!isInTelegram) {
+      renderTeam(demoTeamData());
+      return;
+    }
+    const res = await apiTeamList();
+    if (res.ok) {
+      teamMembers = res.members || [];
+      teamAssignments = res.assignments || [];
+      renderTeam();
+    } else {
+      toast('Не удалось загрузить команду');
+    }
+  }
+
+  function demoTeamData() {
+    teamMembers = [
+      { id: 1, username: 'ivanova_m', name: 'Иванова Мария', role: 'Бухгалтер', user_id: 123, active: true },
+      { id: 2, username: 'petrov_a',  name: 'Петров Алексей', role: 'Менеджер',  user_id: null, active: false },
+    ];
+    teamAssignments = [
+      { id: 1, member_id: 1, member_name: 'Иванова Мария', member_role: 'Бухгалтер', member_username: 'ivanova_m',
+        title: 'Сдать отчёт за квартал', note: '', scheduled_at: new Date().toISOString(),
+        status: 'accepted', decline_reason: null },
+      { id: 2, member_id: 2, member_name: 'Петров Алексей', member_role: 'Менеджер', member_username: 'petrov_a',
+        title: 'Созвониться с поставщиком', note: 'Уточнить сроки', scheduled_at: new Date().toISOString(),
+        status: 'declined', decline_reason: 'Нахожусь в командировке до пятницы' },
+    ];
+  }
+
+  function renderTeam() {
+    const wrap = $('#teamView');
+
+    // Group assignments by member
+    const byMember = {};
+    teamAssignments.forEach(a => {
+      if (!byMember[a.member_id]) byMember[a.member_id] = [];
+      byMember[a.member_id].push(a);
+    });
+
+    let html = '';
+
+    if (teamMembers.length === 0) {
+      html = `<div class="empty-state" style="margin-top:60px">
+        <div class="glyph">👥</div>
+        <div>Добавьте первого сотрудника</div>
+        <div style="font-size:13px;color:var(--ink-dim);margin-top:6px">Добавьте сотрудника по его @username в Telegram — он получит задачи в нужное время</div>
+      </div>`;
+    } else {
+      teamMembers.forEach(m => {
+        const initials = (m.name || m.username).slice(0, 2).toUpperCase();
+        const activeBadge = m.active
+          ? '<span class="member-status-badge active">Активен</span>'
+          : '<span class="member-status-badge inactive">⏳ Не активирован</span>';
+
+        html += `<div class="team-section-title">${m.role || 'Без должности'}</div>
+        <div class="member-card" data-member-id="${m.id}" onclick="openMemberEdit(${m.id})">
+          <div class="member-avatar ${m.active ? '' : 'inactive'}">${initials}</div>
+          <div class="member-info">
+            <div class="mname">${m.name || '@' + m.username}</div>
+            <div class="mrole">@${m.username}</div>
+          </div>
+          ${activeBadge}
+        </div>`;
+
+        // Assignments for this member
+        const asgns = byMember[m.id] || [];
+        if (asgns.length > 0) {
+          html += `<div style="margin-bottom:4px">`;
+          asgns.forEach(a => {
+            const st = ASSIGN_STATUS[a.status] || ASSIGN_STATUS.pending;
+            const dt = new Date(a.scheduled_at);
+            const dtStr = dt.toLocaleString('ru-RU', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+            const declineHtml = a.decline_reason
+              ? `<div class="arow-decline">Причина: ${a.decline_reason}</div>` : '';
+            html += `<div class="assignment-row">
+              <div class="arow-dot" style="background:${a.status==='declined'?'var(--critical)':a.status==='accepted'?'var(--low)':'var(--ink-faint)'}"></div>
+              <div class="arow-body">
+                <div class="arow-title">${a.title}</div>
+                <div class="arow-meta">📅 ${dtStr} &nbsp; <span class="assign-status-badge ${st.cls}">${st.label}</span></div>
+                ${declineHtml}
+              </div>
+              <button class="arow-del" onclick="deleteAssignment(${a.id}, event)" title="Удалить">✕</button>
+            </div>`;
+          });
+          html += `</div>`;
+        }
+
+        // Assign button
+        if (m.active) {
+          html += `<button class="team-add-btn" style="margin-bottom:16px" onclick="openAssignSheet(${m.id}, '${(m.name || '@'+m.username).replace(/'/g, "\\'")}', '${(m.role||'').replace(/'/g, "\\'")}')">+ Поставить задачу</button>`;
+        } else {
+          html += `<div style="font-size:12px;color:var(--ink-faint);margin-bottom:16px;padding:0 4px">Сотрудник должен написать /start боту @majoriktasks_bot для активации</div>`;
+        }
+      });
+    }
+
+    html += `<button class="team-add-btn" onclick="openMemberAdd()">+ Добавить сотрудника</button>`;
+    wrap.innerHTML = html;
+  }
+
+  // ── Member sheet ──────────────────────────────────────────────────────────
+
+  window.openMemberAdd = function() {
+    editingMemberId = null;
+    $('#memberSheetTitle').textContent = 'Добавить сотрудника';
+    $('#mUsername').value = '';
+    $('#mName').value = '';
+    $('#mRole').value = '';
+    $('#mUsername').disabled = false;
+    $('#memberDeleteBtn').style.display = 'none';
+    openSheet('memberSheet');
+  };
+
+  window.openMemberEdit = function(id) {
+    const m = teamMembers.find(x => x.id === id);
+    if (!m) return;
+    editingMemberId = id;
+    $('#memberSheetTitle').textContent = 'Редактировать';
+    $('#mUsername').value = '@' + m.username;
+    $('#mName').value = m.name || '';
+    $('#mRole').value = m.role || '';
+    $('#mUsername').disabled = true;
+    $('#memberDeleteBtn').style.display = 'block';
+    openSheet('memberSheet');
+  };
+
+  $('#memberSaveBtn').addEventListener('click', async () => {
+    const username = $('#mUsername').value.trim().replace(/^@/, '');
+    const name = $('#mName').value.trim();
+    const role = $('#mRole').value.trim();
+    if (!username) { toast('Введите username'); return; }
+
+    $('#memberSaveBtn').disabled = true;
+    let res;
+    if (editingMemberId) {
+      res = await apiTeamUpdateMember(editingMemberId, name, role);
+    } else {
+      res = await apiTeamAddMember(username, name, role);
+    }
+    $('#memberSaveBtn').disabled = false;
+
+    if (res.ok) {
+      closeSheet('memberSheet');
+      await loadAndRenderTeam();
+      toast(editingMemberId ? 'Сохранено' : 'Сотрудник добавлен');
+    } else {
+      toast('Ошибка: ' + (res.error || 'неизвестно'));
+    }
+  });
+
+  $('#memberDeleteBtn').addEventListener('click', async () => {
+    if (!editingMemberId) return;
+    if (!confirm('Удалить сотрудника и все его задания?')) return;
+    const res = await apiTeamDeleteMember(editingMemberId);
+    if (res.ok) {
+      closeSheet('memberSheet');
+      await loadAndRenderTeam();
+      toast('Сотрудник удалён');
+    } else {
+      toast('Ошибка удаления');
+    }
+  });
+
+  $('#memberSheetClose').addEventListener('click', () => closeSheet('memberSheet'));
+
+  // ── Assign sheet ──────────────────────────────────────────────────────────
+
+  window.openAssignSheet = function(memberId, memberName, memberRole) {
+    assigningMemberId = memberId;
+    const label = memberRole ? `${memberName} · ${memberRole}` : memberName;
+    $('#assignMemberName').textContent = '👤 ' + label;
+    $('#aTitle').value = '';
+    $('#aNote').value = '';
+    const now = new Date();
+    $('#aDate').value = now.toISOString().slice(0, 10);
+    $('#aTime').value = now.toTimeString().slice(0, 5);
+    openSheet('assignSheet');
+  };
+
+  $('#assignSaveBtn').addEventListener('click', async () => {
+    const title = $('#aTitle').value.trim();
+    const note  = $('#aNote').value.trim();
+    const date  = $('#aDate').value;
+    const time  = $('#aTime').value;
+    if (!title) { toast('Введите задачу'); return; }
+    if (!date || !time) { toast('Укажите дату и время'); return; }
+
+    const scheduled_at = new Date(`${date}T${time}:00`).toISOString();
+
+    $('#assignSaveBtn').disabled = true;
+    const res = await apiTeamAssign(assigningMemberId, title, note, scheduled_at);
+    $('#assignSaveBtn').disabled = false;
+
+    if (res.ok) {
+      closeSheet('assignSheet');
+      await loadAndRenderTeam();
+      toast('Задача поставлена — придёт в назначенное время');
+    } else {
+      toast('Ошибка: ' + (res.error || 'неизвестно'));
+    }
+  });
+
+  $('#assignSheetClose').addEventListener('click', () => closeSheet('assignSheet'));
+
+  // ── Delete assignment ──────────────────────────────────────────────────────
+
+  window.deleteAssignment = async function(id, e) {
+    e.stopPropagation();
+    if (!confirm('Удалить это задание?')) return;
+    const res = await apiTeamDeleteAssignment(id);
+    if (res.ok) {
+      await loadAndRenderTeam();
+      toast('Задание удалено');
+    } else {
+      toast('Ошибка удаления');
+    }
+  };
 
 })();
 </script>
