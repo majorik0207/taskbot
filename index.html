@@ -46,11 +46,15 @@
     font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
     overscroll-behavior-y: none;
+    overflow-x: hidden;
+    max-width: 100vw;
   }
 
   #app {
     min-height: 100vh;
     padding-bottom: calc(84px + var(--safe-bot));
+    max-width: 100vw;
+    overflow-x: hidden;
   }
 
   .sidebar { display: none; }
@@ -274,15 +278,19 @@
 
   .switch button {
     flex: 1;
+    min-width: 0;
     border: none;
     background: transparent;
     color: var(--ink-dim);
     font-family: inherit;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
-    padding: 9px 0;
+    padding: 9px 4px;
     border-radius: calc(var(--radius-md) - 4px);
     transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .switch button.active {
